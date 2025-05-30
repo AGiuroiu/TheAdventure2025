@@ -12,6 +12,7 @@ public class Engine
     private readonly GameRenderer _renderer;
     private readonly Input _input;
     private readonly ScriptEngine _scriptEngine = new();
+    private readonly bool _smoothCameraEnabled;
 
     private readonly Dictionary<int, GameObject> _gameObjects = new();
     private readonly Dictionary<string, TileSet> _loadedTileSets = new();
@@ -22,13 +23,14 @@ public class Engine
 
     private DateTimeOffset _lastUpdate = DateTimeOffset.Now;
 
-    public Engine(GameRenderer renderer, Input input)
-    {
-        _renderer = renderer;
-        _input = input;
+    public Engine(GameRenderer renderer, Input input, bool smoothCameraEnabled = true)
+{
+    _renderer = renderer;
+    _input = input;
+    _smoothCameraEnabled = smoothCameraEnabled;
 
-        _input.OnMouseClick += (_, coords) => AddBomb(coords.x, coords.y);
-    }
+    _input.OnMouseClick += (_, coords) => AddBomb(coords.x, coords.y);
+}
 
     public void SetupWorld()
     {
@@ -119,7 +121,17 @@ public class Engine
 
         RenderTerrain();
         RenderAllObjects();
-
+       if (_smoothCameraEnabled)
+{
+    var playerPosition = _player!.Position;
+    _renderer.CameraLookAt(playerPosition.X, playerPosition.Y);
+}
+else
+{
+    var playerPosition = _player!.Position;
+    _renderer.CameraLookAt(playerPosition.X, playerPosition.Y); // momentan aceeasi, dar logic separabil
+}
+ 
         _renderer.PresentFrame();
     }
 

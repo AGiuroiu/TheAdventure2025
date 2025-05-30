@@ -189,6 +189,7 @@ public class Engine
         }
     }
 
+    
     public IEnumerable<RenderableGameObject> GetRenderables()
     {
         foreach (var gameObject in _gameObjects.Values)

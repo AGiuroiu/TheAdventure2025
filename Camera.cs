@@ -43,15 +43,25 @@ public class Camera
     
     public void LookAt(int x, int y)
     {
-        if (_worldBounds.Contains(new Vector2D<int>(_x, y)))
-        {
-            _y = y;
-        }
+        var targetX = _x;
+        var targetY = _y;
+
         if (_worldBounds.Contains(new Vector2D<int>(x, _y)))
         {
-            _x = x;
+            targetX = x;
         }
-    }
+
+        if (_worldBounds.Contains(new Vector2D<int>(_x, y)))
+        {
+            targetY = y;
+        }
+
+    // Interpolare pentru mișcare lină
+    const float smoothFactor = 0.15f;
+    _x += (int)((targetX - _x) * smoothFactor);
+    _y += (int)((targetY - _y) * smoothFactor);
+}
+
 
     public Rectangle<int> ToScreenCoordinates(Rectangle<int> rect)
     {

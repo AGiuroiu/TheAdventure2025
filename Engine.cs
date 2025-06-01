@@ -22,6 +22,11 @@ public class Engine
     private int _tileWidth;
     private int _tileHeight;
 
+    private double _shakeTimeRemaining = 0.0;         
+    private const double _shakeDuration = 0.5;       
+    private const int _shakeMagnitude = 8;            
+    private readonly Random _random = new();          
+
     private DateTimeOffset _lastUpdate = DateTimeOffset.Now;
 
     public Engine(GameRenderer renderer, Input input)
@@ -111,10 +116,16 @@ public class Engine
         if (addBomb)
         {
             AddBomb(_player.Position.X, _player.Position.Y, false);
+             _shakeTimeRemaining = _shakeDuration;
         }
 
         CheckCollisions(oldX, oldY);
-
+        if (_shakeTimeRemaining > 0.0)
+        {
+            _shakeTimeRemaining -= (msSinceLastFrame / 1000.0);
+            if (_shakeTimeRemaining < 0.0)
+                _shakeTimeRemaining = 0.0;
+        }
     }
 
     public void RenderFrame()
@@ -123,6 +134,16 @@ public class Engine
         _renderer.ClearScreen();
 
         var playerPosition = _player!.Position;
+
+         int camOffsetX = 0, camOffsetY = 0;
+            if (_shakeTimeRemaining > 0.0)
+        {
+            
+            double range = _shakeMagnitude;
+            camOffsetX = (int)((_random.NextDouble() * 2.0 - 1.0) * range);
+            camOffsetY = (int)((_random.NextDouble() * 2.0 - 1.0) * range);
+        }
+
         _renderer.CameraLookAt(playerPosition.X, playerPosition.Y);
 
         RenderTerrain();

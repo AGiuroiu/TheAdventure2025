@@ -117,6 +117,7 @@ public class Engine
 
     }
 
+
     public void RenderFrame()
     {
         _renderer.SetDrawColor(0, 0, 0, 255);

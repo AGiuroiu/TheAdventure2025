@@ -19,6 +19,8 @@ public class Engine
 
     private Level _currentLevel = new();
     private PlayerObject? _player;
+    private int _tileWidth;
+    private int _tileHeight;
 
     private DateTimeOffset _lastUpdate = DateTimeOffset.Now;
 
@@ -68,6 +70,8 @@ public class Engine
         {
             throw new Exception("Invalid tile dimensions");
         }
+        _tileWidth = level.TileWidth.Value;
+        _tileHeight = level.TileHeight.Value;
 
         _renderer.SetWorldBounds(new Rectangle<int>(0, 0, level.Width.Value * level.TileWidth.Value,
             level.Height.Value * level.TileHeight.Value));
@@ -94,19 +98,23 @@ public class Engine
         double right = _input.IsRightPressed() ? 1.0 : 0.0;
         bool isAttacking = _input.IsKeyAPressed() && (up + down + left + right <= 1);
         bool addBomb = _input.IsKeyBPressed();
-
+        var oldX = _player.Position.X;
+        var oldY = _player.Position.Y;
         _player.UpdatePosition(up, down, left, right, 48, 48, msSinceLastFrame);
         if (isAttacking)
         {
             _player.Attack();
         }
-        
+
         _scriptEngine.ExecuteAll(this);
 
         if (addBomb)
         {
             AddBomb(_player.Position.X, _player.Position.Y, false);
         }
+
+        CheckCollisions(oldX, oldY);
+
     }
 
     public void RenderFrame()
@@ -214,5 +222,44 @@ public class Engine
 
         TemporaryGameObject bomb = new(spriteSheet, 2.1, (worldCoords.X, worldCoords.Y));
         _gameObjects.Add(bomb.Id, bomb);
+    }
+    private void CheckCollisions(int oldX, int oldY)
+    {
+        if (_player == null)
+            return;
+
+        const int playerWidth = 48;
+        const int playerHeight = 48;
+
+        int playerX = _player.Position.X;
+        int playerY = _player.Position.Y;
+
+
+        int leftTile   = playerX / _tileWidth;
+        int rightTile  = (playerX + playerWidth  - 1) / _tileWidth;
+        int topTile    = playerY / _tileHeight;
+        int bottomTile = (playerY + playerHeight - 1) / _tileHeight;
+
+
+        var collisionLayer = _currentLevel.Layers[0];
+
+
+        for (int tx = leftTile; tx <= rightTile; tx++)
+        {
+            for (int ty = topTile; ty <= bottomTile; ty++)
+            {
+
+                if (tx < 0 || tx >= collisionLayer.Width || ty < 0 || ty >= collisionLayer.Height)
+                    continue;
+
+                int index = ty * collisionLayer.Width + tx;
+                int tileGid = collisionLayer.Data[index];
+                if (tileGid != 0)
+                {
+                    _player.Position = (oldX, oldY);
+                    return;
+                }
+            }
+        }
     }
 }
